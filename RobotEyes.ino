@@ -12,7 +12,6 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 #define SERVO_3 3
 #define SERVO_4 4
 #define SERVO_5 5
-#define SERVO_6 6
 
 class Muscle {
   public:
@@ -41,28 +40,95 @@ class EyelidSet {
     EyelidSet(Muscle& t, Muscle& b) : top(t), bottom(b) {}
   
     void close() {
-      top.setAngle(0);
-      bottom.setAngle(0);
+      top.setAngle(-90);
+      bottom.setAngle(90);
     }
 
     void open() {
-      top.setAngle(45);
-      bottom.setAngle(-45);
+      top.setAngle(90);
+      bottom.setAngle(-90);
     }
 };
+
+class Eyes {
+  public:
+      Eyes(EyelidSet& left_eye, EyelidSet& right_eye, Muscle& up_down, Muscle& left_right)
+        : left_eye(left_eye), right_eye(right_eye), up_down(up_down), left_right(left_right) {}
+
+      void open() {
+        left_eye.open();
+        right_eye.open();
+      }
+
+      void close() {
+        left_eye.close();
+        right_eye.close();
+      }
+
+      void blink() {
+        this->close();
+        delay(100);
+        this->open();
+      }
+
+      void double_blink(){
+        this->blink();
+        delay(100);
+        this->blink();
+      }
+
+      void look_left() {
+        left_right.setAngle(90);
+      }
+
+      void look_right() {
+        left_right.setAngle(-90);
+      }
+
+      void look_up() {
+        up_down.setAngle(90);
+      }
+
+      void look_down() {
+        up_down.setAngle(-90);
+      }
+
+      void look_ahead() {
+        left_right.setAngle(0);
+        up_down.setAngle(0);
+      }
+
+      void reset() {
+        this->open();
+        this->look_ahead();
+      }
+
+  private:
+      EyelidSet& left_eye;
+      EyelidSet& right_eye;
+      Muscle& up_down;
+      Muscle& left_right;
+};
+
 
 
 
 // Define each muscle object
 Muscle left_right_look(SERVO_0, -45, 45);
-Muscle up_down_look(SERVO_1, -45, 45);
-Muscle top_right_eyelid(SERVO_2, 0, 45);
+Muscle up_down_look(SERVO_1, -25, 25);
+
+Muscle top_right_eyelid(SERVO_2, -45, 0);
+
 Muscle bottom_right_eyelid(SERVO_3, -45, 0);
+
 Muscle bottom_left_eyelid(SERVO_4, 0, 45);
+
 Muscle top_left_eyelid(SERVO_5, -45, 0);
 
 EyelidSet right_eyelid_set(top_right_eyelid, bottom_right_eyelid);
 EyelidSet left_eyelid_set(bottom_left_eyelid, top_left_eyelid);
+
+Eyes eyes(left_eyelid_set, right_eyelid_set, up_down_look, left_right_look);
 
 
 void setup() {
@@ -72,22 +138,33 @@ void setup() {
   delay(10);
 
   // Set all servos to 0 degrees
-  left_right_look.setAngle(0);
-  up_down_look.setAngle(0);
-  top_right_eyelid.setAngle(0);
-  bottom_right_eyelid.setAngle(0);
-  bottom_left_eyelid.setAngle(0);
-  top_left_eyelid.setAngle(0);
-
+  eyes.reset();
 }
 
 void loop() {
-  right_eyelid_set.open();
-  left_eyelid_set.open();
+  eyes.reset();
   delay(1000);
-  right_eyelid_set.close();
-  left_eyelid_set.close();
+
+  eyes.look_down();
   delay(1000);
+  eyes.look_up();
+  delay(1000);
+
+  eyes.reset();
+  delay(1000);
+
+  eyes.look_left();
+  delay(1000);
+  eyes.look_right();
+  delay(1000);
+
+  eyes.reset();
+  delay(1000);
+
+  eyes.blink();
+  delay(500);
+  eyes.double_blink();
+  delay(500);
 
 }
 
